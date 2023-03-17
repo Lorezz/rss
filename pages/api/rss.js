@@ -1,39 +1,61 @@
-export default function handler(req, res) {
+import axios from "axios";
+const KEY = process.env.DATO_API_KEY;
+const HOST = process.env.HOST;
+
+async function doQuery() {
+  const query = `query posts {
+  posts: allPosts(orderBy: pubDate_DESC) {
+    id
+    title
+    slug
+    enclosure: image {
+      url
+      type: mimeType
+      alt
+      author
+    }
+    category
+    description
+    pubDate
+    _updatedAt
+  }
+}
+`;
+
+  const response = await axios({
+    url: "https://graphql.datocms.com/",
+    method: "post",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${KEY}`,
+      "Content-Type": "application/json",
+      "X-Include-Drafts": "true",
+      "X-Exclude-Invalid": "true",
+    },
+    data: { query },
+  });
+  return response.data.data.posts;
+}
+
+export default async function handler(req, res) {
   const feeedTitle = "My-RSS-Feed.xyz";
   const feedDescription =
     "MyRssFeed is a a post aggregator from multiple sources.";
-  const url = "https://thingoftheday.xyz/.netlify/functions/rss";
+  const url = `${HOST}/api/rss`;
   const imageSide = 150;
   const imageUrl = "https://picsum.photos/" + imageSide + "/" + imageSide;
 
-  const items = [
-    {
-      title: "Item 1",
-      id: 111,
-      link: "https://thingoftheday.xyz/category-1/111",
-      pubDate: "2021-01-01",
-      enclosure: { url: "https://picsum.photos/200/300", type: "image/jpg" },
+  const posts = await doQuery();
+  const items = posts.map((post) => {
+    return {
+      ...post,
+      link: `${HOST}/post/${post.slug}`,
       category: {
-        name: "Category 1",
-        domain: "https://thingoftheday.xyz/category-1",
+        name: post.category,
+        domain: `${HOST}/category/${post.category}`,
       },
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec auctor, nisl eget ultricies tincidunt, nunc nisl aliquam nisl, eget aliquet nisl nisl eget nisl. Donec auctor, nisl eget ultricies tincidunt, nunc nisl aliquam nisl, eget aliquet nisl nisl eget nisl.",
-    },
-    {
-      title: "Item 2",
-      id: 222,
-      link: "https://thingoftheday.xyz/category-2/222",
-      pubDate: "2021-01-01",
-      enclosure: { url: "https://picsum.photos/200/300", type: "image/jpg" },
-      category: {
-        name: "Category 2",
-        domain: "https://thingoftheday.xyz/category-2",
-      },
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec auctor, nisl eget ultricies tincidunt, nunc nisl aliquam nisl, eget aliquet nisl nisl eget nisl. Donec auctor, nisl eget ultricies tincidunt, nunc nisl aliquam nisl, eget aliquet nisl nisl eget nisl.",
-    },
-  ];
+    };
+  });
 
   const contents = items
     .map((item) => {
