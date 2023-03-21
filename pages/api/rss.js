@@ -51,11 +51,10 @@ export default async function handler(req, res) {
     return dayjs(b.pubDate).format("x") - dayjs(a.pubDate).format("x");
   });
 
-  const imageSide = 50;
   const feed = {
     title: current.info.name,
-    imageUrl: encodeURI(current.image.url),
-    imageSide,
+    imageUrl: encodeURIComponent(current.info.image.url),
+    imageSide: 150,
     description: "MyRssFeed is a a post aggregator from multiple sources.",
     url: `${HOST}/api/rss`,
     items,
