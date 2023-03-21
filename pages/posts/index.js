@@ -8,7 +8,17 @@ export default function Page({ info, posts }) {
       <ul>
         {posts.map((post) => (
           <li key={post.id}>
-            <Link href={`/posts/${post.slug}`}>{post.title}</Link>
+            <Link href={`/posts/${post.slug}`}>
+              <div>
+                <img
+                  width={80}
+                  src={post.enclosure.url}
+                  alt={post.enclosure.alt}
+                  title={post.enclosure.title}
+                />
+                <span style={{ margin: 4 }}>{post.title}</span>
+              </div>
+            </Link>
           </li>
         ))}
       </ul>
