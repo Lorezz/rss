@@ -1,0 +1,48 @@
+import { useEffect, useState } from "react";
+import Parser from "rss-parser";
+
+export default function Home() {
+  const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function getData() {
+      const newsUrl = "/api/rss";
+      console.log(newsUrl);
+      let feed = null;
+      try {
+        let parser = new Parser();
+        feed = await parser.parseURL(newsUrl);
+        console.log("feed", feed);
+        setList([...feed.items]);
+      } catch (error) {
+        console.error("FEED ERROR", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    getData();
+  }, []);
+
+  return (
+    <div>
+      <h1>FEED</h1>
+      {loading && <p>Loading...</p>}
+      <ul>
+        {list.map((item) => (
+          <li key={item.guid}>
+            <h2>{item.title}</h2>
+            <img
+              src={item.enclosure.url}
+              lazyload="true"
+              alt={item.title}
+              title={item.title}
+              width={250}
+            />
+            <div dangerouslySetInnerHTML={{ __html: item.content }} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
