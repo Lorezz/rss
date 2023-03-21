@@ -32,8 +32,14 @@ export default function Home({ host, info }) {
 
   return (
     <Layout info={info}>
-      <h4>{host}</h4>
-      <h1>Feed</h1>
+      <p>CURRENT HOST: {host}</p>
+      <h1>Feed RSS</h1>
+      <p>
+        {"source: "}
+        <a href={feedRss} target="_blank">
+          {feedRss}
+        </a>
+      </p>
       {loading && <p>Loading...</p>}
       <ul>
         {list.map((item) => (
@@ -51,7 +57,12 @@ export default function Home({ host, info }) {
               <small>{dayjs(item.pubDate).format("YYYY-MM-DD")}</small>
             </div>
             <div>
-              <Link href={item.link}>link</Link>
+              <a
+                href={item.link}
+                target={item.link.indexOf("vercel") > -1 ? "vercel" : "netlify"}
+              >
+                link
+              </a>
             </div>
             <div dangerouslySetInnerHTML={{ __html: item.content }} />
           </li>
