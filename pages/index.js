@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import Parser from "rss-parser";
 
-export default function Home() {
+export default function Home({ host }) {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function getData() {
-      const newsUrl = "/api/rss";
+      const newsUrl = `${host}/api/rss`;
       console.log(newsUrl);
       let feed = null;
       try {
@@ -26,7 +26,7 @@ export default function Home() {
 
   return (
     <div>
-      <h1>FEED</h1>
+      <h1>FEED {host}</h1>
       {loading && <p>Loading...</p>}
       <ul>
         {list.map((item) => (
@@ -45,4 +45,11 @@ export default function Home() {
       </ul>
     </div>
   );
+}
+
+export async function getStaticProps() {
+  const host = process.env.HOST;
+  return {
+    props: { host },
+  };
 }

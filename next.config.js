@@ -2,6 +2,9 @@
 const nextConfig = {
   experimental: {
     appDir: false,
+    env: {
+      HOST: process.env.HOST,
+    },
   },
 };
 

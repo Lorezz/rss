@@ -1,6 +1,16 @@
+import Cors from "cors";
 import axios from "axios";
+import initMiddleware from "@/lib/init-middleware";
+
 const KEY = process.env.DATO_API_KEY;
 const HOST = process.env.HOST;
+
+const cors = initMiddleware(
+  Cors({
+    // Only allow requests with GET, POST and OPTIONS
+    methods: ["GET", "POST", "OPTIONS"],
+  })
+);
 
 async function doQuery() {
   const query = `query posts {
@@ -38,7 +48,9 @@ async function doQuery() {
 }
 
 export default async function handler(req, res) {
-  const feeedTitle = "My-RSS-Feed.xyz";
+  await cors(req, res);
+
+  const feeedTitle = "MyRssFeed";
   const feedDescription =
     "MyRssFeed is a a post aggregator from multiple sources.";
   const url = `${HOST}/api/rss`;
