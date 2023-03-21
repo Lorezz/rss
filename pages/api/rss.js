@@ -1,9 +1,12 @@
 import Cors from "cors";
-import axios from "axios";
 import initMiddleware from "@/lib/init-middleware";
+import fetchData from "@/lib/fetchData";
+import getRss from "@/lib/rssUtils";
+import * as dayjs from "dayjs";
 
-const KEY = process.env.DATO_API_KEY;
 const HOST = process.env.HOST;
+const DEMO1 = process.env.DEMO1;
+const DEMO2 = process.env.DEMO2;
 
 const cors = initMiddleware(
   Cors({
@@ -12,98 +15,50 @@ const cors = initMiddleware(
   })
 );
 
-async function doQuery() {
-  const query = `query posts {
-  posts: allPosts(orderBy: pubDate_DESC) {
-    id
-    title
-    slug
-    enclosure: image {
-      url
-      type: mimeType
-      alt
-      author
-    }
-    category
-    description
-    pubDate
-    _updatedAt
-  }
-}
-`;
-
-  const response = await axios({
-    url: "https://graphql.datocms.com/",
-    method: "post",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${KEY}`,
-      "Content-Type": "application/json",
-      "X-Include-Drafts": "true",
-      "X-Exclude-Invalid": "true",
-    },
-    data: { query },
+function getItems(results, type, host) {
+  return results.map((item) => {
+    return {
+      ...item,
+      link: `${host}/${type}/${item.slug}`,
+      category: {
+        name: item.category,
+        domain: `${host}/category/${item.category}`,
+      },
+    };
   });
-  return response.data.data.posts;
 }
 
 export default async function handler(req, res) {
   await cors(req, res);
 
-  const feeedTitle = "MyRssFeed";
-  const feedDescription =
-    "MyRssFeed is a a post aggregator from multiple sources.";
-  const url = `${HOST}/api/rss`;
-  const imageSide = 150;
-  const imageUrl = "https://picsum.photos/" + imageSide + "/" + imageSide;
+  const demo1 = await fetchData(DEMO1);
+  const demo2 = await fetchData(DEMO2);
 
-  const posts = await doQuery();
-  const items = posts.map((post) => {
-    return {
-      ...post,
-      link: `${HOST}/post/${post.slug}`,
-      category: {
-        name: post.category,
-        domain: `${HOST}/category/${post.category}`,
-      },
-    };
+  const itemsDemo1 = getItems(demo1.posts, "posts", demo1.info.url);
+  const itemsDemo2 = getItems(demo2.posts, "posts", demo2.info.url);
+
+  const itemsDemo3 = getItems(demo1.artworks, "artworks", demo1.info.url);
+  const itemsDemo4 = getItems(demo2.artworks, "artworks", demo2.info.url);
+
+  const items = [
+    ...itemsDemo1,
+    ...itemsDemo2,
+    ...itemsDemo3,
+    ...itemsDemo4,
+  ].sort((a, b) => {
+    return dayjs(b.pubDate).format("x") - dayjs(a.pubDate).format("x");
   });
 
-  const contents = items
-    .map((item) => {
-      const { enclosure, category, title, link, pubDate } = item;
-      return `
-    <item>
-        <title>${title}</title>
-        <link>${link}</link>
-        <guid>${link}</guid>
-        <pubDate>${pubDate}</pubDate>
-        <enclosure length="0" type="${enclosure.type}" url="${enclosure.url}"/>
-        <category domain="${category.domain}">${category.name}</category>
-        <description><![CDATA[ ${item.description} ]]></description>
-      </item>
-      `;
-    })
-    .join("");
-
-  const rss = `
- <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-    <channel>
-      <title>${feeedTitle}</title>
-      <link href="${url}" rel="self" type="application/rss+xml" />
-      <atom:link href="${url}" rel="self" type="application/rss+xml" />
-      <description>${feedDescription}</description>
-      <image>
-        <link>200/300</link>
-        <title>Dallas Times-Herald</title>
-        <url>${imageUrl}</url>
-        <description>${feeedTitle}</description>
-        <height>${imageSide}</height>
-        <width>${imageSide}</width>
-      </image>
-      ${contents}
-    </channel>
-  </rss>`;
+  const imageSide = 150;
+  const feed = {
+    title: "MyRssFeed",
+    description: "MyRssFeed is a a post aggregator from multiple sources.",
+    url: `${HOST}/api/rss`,
+    imageUrl: "https://picsum.photos/" + imageSide + "/" + imageSide,
+    imageSide,
+    items,
+  };
+  const rss = getRss(feed);
 
   res.setHeader("Content-Type", "text/xml");
   res.status(200).send(rss);
