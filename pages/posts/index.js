@@ -18,8 +18,6 @@ export default function Page({ info, posts }) {
 
 export async function getStaticProps() {
   const key = process.env.NEXT_PUBLIC_KEY;
-  console.log("key", key);
-
   const { posts, info } = await fetchData(key);
   return {
     props: { info, posts },

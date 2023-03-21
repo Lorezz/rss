@@ -7,6 +7,7 @@ import * as dayjs from "dayjs";
 const HOST = process.env.HOST;
 const DEMO1 = process.env.DEMO1;
 const DEMO2 = process.env.DEMO2;
+const API_KEY = process.env.NEXT_PUBLIC_KEY;
 
 const cors = initMiddleware(
   Cors({
@@ -33,6 +34,7 @@ export default async function handler(req, res) {
 
   const demo1 = await fetchData(DEMO1);
   const demo2 = await fetchData(DEMO2);
+  const current = await fetchData(API_KEY);
 
   const itemsDemo1 = getItems(demo1.posts, "posts", demo1.info.url);
   const itemsDemo2 = getItems(demo2.posts, "posts", demo2.info.url);
@@ -49,13 +51,13 @@ export default async function handler(req, res) {
     return dayjs(b.pubDate).format("x") - dayjs(a.pubDate).format("x");
   });
 
-  const imageSide = 150;
+  const imageSide = 50;
   const feed = {
-    title: "MyRssFeed",
+    title: current.info.name,
+    imageUrl: encodeURI(current.image.url),
+    imageSide,
     description: "MyRssFeed is a a post aggregator from multiple sources.",
     url: `${HOST}/api/rss`,
-    imageUrl: "https://picsum.photos/" + imageSide + "/" + imageSide,
-    imageSide,
     items,
   };
   const rss = getRss(feed);

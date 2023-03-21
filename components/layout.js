@@ -1,15 +1,16 @@
 import Link from "next/link";
 
 export default function Layout({ info, children }) {
+  const { name, color } = info;
   return (
     <div>
       <div
         style={{
           padding: 2,
-          backgroundColor: info?.color?.hex || "black",
+          backgroundColor: color?.hex || "black",
         }}
       >
-        <h1 style={{ color: "white", margin: 2 }}>{info.name}</h1>
+        <h1 style={{ color: "white", margin: 2 }}>{name}</h1>
       </div>
       <div>
         <nav>

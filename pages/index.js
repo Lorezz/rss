@@ -8,10 +8,10 @@ import * as dayjs from "dayjs";
 export default function Home({ host, info }) {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const { feedRss } = info;
   useEffect(() => {
-    async function getFeed(host) {
-      const feedUrl = `${host}/api/rss`;
+    async function getFeed(feedUrl) {
+      // const feedUrl = `${feedRss}/api/rss`;
       console.log(feedUrl);
       let feed = null;
       try {
@@ -25,13 +25,14 @@ export default function Home({ host, info }) {
         setLoading(false);
       }
     }
-    if (host) {
-      getFeed(host);
+    if (feedRss) {
+      getFeed(feedRss);
     }
-  }, [host]);
+  }, [feedRss]);
 
   return (
     <Layout info={info}>
+      <h4>{host}</h4>
       <h1>Feed</h1>
       {loading && <p>Loading...</p>}
       <ul>
@@ -63,9 +64,7 @@ export default function Home({ host, info }) {
 export async function getStaticProps() {
   const host = process.env.HOST;
   const key = process.env.NEXT_PUBLIC_KEY;
-  console.log("key", key);
   const { info } = await fetchData(key);
-  console.log("info", info);
   return {
     props: { host, info },
   };

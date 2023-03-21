@@ -31,7 +31,6 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params: { slug } }) {
   const key = process.env.NEXT_PUBLIC_KEY;
-  console.log("key", key);
   const { artworks, info } = await fetchData(key);
   const post = artworks.find((post) => post.slug === slug);
   return {
